@@ -61,3 +61,30 @@ artifacts = [
 
 [tool.hatch.build.targets.wheel.hooks.custom]
 path = "hatch_build.py"
+
+[tool.cibuildwheel]
+build-frontend = { name = "build[uv]", args = ["--verbose"] }
+build = "cp312-*"
+skip = ["*-manylinux_i686", "*-musllinux_i686", "*-win32"]
+
+[tool.cibuildwheel.linux]
+manylinux-x86_64-image = "manylinux_2_28"
+manylinux-aarch64-image = "manylinux_2_28"
+musllinux-x86_64-image = "musllinux_1_2"
+musllinux-aarch64-image = "musllinux_1_2"
+repair-wheel-command = "auditwheel repair --strip -w {dest_dir} {wheel}"
+
+[tool.cibuildwheel.macos]
+before-all = "brew install boost"
+environment.MACOSX_DEPLOYMENT_TARGET = "15.0"
+
+[[tool.cibuildwheel.overrides]]
+select = "*-manylinux*"
+before-all = [
+    "dnf config-manager --set-enabled powertools || dnf config-manager --set-enabled crb",
+    "dnf install -y cmake gcc-c++ boost-devel opencl-headers ocl-icd-devel git",
+]
+
+[[tool.cibuildwheel.overrides]]
+select = "*-musllinux*"
+before-all = "apk add --no-cache cmake g++ boost-dev opencl-headers opencl-dev opencl git"

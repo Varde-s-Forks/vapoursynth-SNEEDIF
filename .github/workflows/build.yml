@@ -17,60 +17,26 @@ jobs:
         include:
           - arch: x86_64
             os: ubuntu-24.04
-            container: quay.io/pypa/manylinux_2_28_x86_64
-          - arch: arm64
+          - arch: aarch64
             os: ubuntu-24.04-arm
-            container: quay.io/pypa/manylinux_2_28_aarch64
-          - arch: x86_64
-            os: ubuntu-24.04
-            container: quay.io/pypa/musllinux_1_2_x86_64
-          - arch: arm64
-            os: ubuntu-24.04-arm
-            container: quay.io/pypa/musllinux_1_2_aarch64
-          - arch: x86_64
-            os: windows-2025-vs2026
           - arch: x86_64
             os: macos-15-intel
-            container: ""
           - arch: arm64
             os: macos-15
+          - arch: x86_64
+            os: windows-2025-vs2026
 
     runs-on: ${{ matrix.os }}
-    container: ${{ matrix.container }}
-    name: Build wheels on ${{ matrix.container || matrix.os }}
+    name: Build wheels on ${{ matrix.os }} (${{ matrix.arch }})
 
     steps:
       - uses: actions/checkout@v6
 
-      - name: Set up uv (Linux & macOS)
-        if: runner.os == 'Linux' || runner.os == 'macOS'
-        uses: astral-sh/setup-uv@v8.1.0
+      - name: Build wheels (Unix)
+        if: runner.os != 'Windows'
+        uses: pypa/cibuildwheel@v3.4.1
         with:
-          python-version: 3.12
-
-      - name: Install dependencies (manylinux)
-        if: contains(matrix.container, 'manylinux')
-        run: |
-          dnf config-manager --set-enabled powertools || dnf config-manager --set-enabled crb
-          dnf install -y \
-            cmake \
-            gcc-c++ \
-            boost-devel \
-            opencl-headers \
-            ocl-icd-devel \
-            git
-
-      - name: Install dependencies (musllinux)
-        if: contains(matrix.container, 'musllinux')
-        run: |
-          apk add --no-cache \
-            cmake \
-            g++ \
-            boost-dev \
-            opencl-headers \
-            opencl-dev \
-            opencl \
-            git
+          extras: uv
 
       - name: Set up MSYS2 (Windows)
         if: runner.os == 'Windows'
@@ -89,38 +55,17 @@ jobs:
             opencl-icd:p
             uv:p
 
-      - name: Install dependencies (macOS)
-        if: runner.os == 'macOS'
-        run: brew install boost
-
-      - name: Build wheels (Linux & macOS)
-        if: runner.os == 'Linux' || runner.os == 'macOS'
-        run: uv build --wheel
-
       - name: Build wheels (Windows)
         if: runner.os == 'Windows'
         shell: msys2 {0}
-        run: uv build --wheel
-
-      - name: Repair wheels (Linux)
-        if: runner.os == 'Linux'
-        run: |
-          uvx --with patchelf auditwheel repair --strip dist/*.whl -w repaired_wheels
-          rm -rf dist/*.whl
-          mv repaired_wheels/*.whl dist/
-
-      - name: Repair wheels (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          uvx --from delocate delocate-wheel -v dist/*.whl -w repaired_wheels
-          rm dist/*.whl
-          mv repaired_wheels/*.whl dist/
-          uvx --from delocate delocate-listdeps dist/*.whl
+        run: uv build
 
       - uses: actions/upload-artifact@v7
         with:
           name: vapoursynth-sneedif-wheels-${{ runner.os }}-${{ matrix.arch }}
-          path: dist/*.whl
+          path: |
+            dist/*.whl
+            wheelhouse/*.whl
 
   build-sdist:
     name: Build source distribution
