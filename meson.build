@@ -12,20 +12,6 @@ add_project_arguments('-DCL_TARGET_OPENCL_VERSION=200', language: 'cpp') # Expli
 sources = [
   'SNEEDIF/SNEEDIF.cpp',
   'SNEEDIF/NNEDI3.cpp',
-  'SNEEDIF/half_float/umHalf.h',
-  'SNEEDIF/vectorclass/instrset_detect.cpp',
-  'SNEEDIF/vectorclass/instrset.h',
-  'SNEEDIF/vectorclass/vectorclass.h',
-  'SNEEDIF/vectorclass/vectorf128.h',
-  'SNEEDIF/vectorclass/vectorf256.h',
-  'SNEEDIF/vectorclass/vectorf256e.h',
-  'SNEEDIF/vectorclass/vectorf512.h',
-  'SNEEDIF/vectorclass/vectorf512e.h',
-  'SNEEDIF/vectorclass/vectori128.h',
-  'SNEEDIF/vectorclass/vectori256.h',
-  'SNEEDIF/vectorclass/vectori256e.h',
-  'SNEEDIF/vectorclass/vectori512.h',
-  'SNEEDIF/vectorclass/vectori512e.h'
 ]
 
 py = import('python').find_installation(pure: false)

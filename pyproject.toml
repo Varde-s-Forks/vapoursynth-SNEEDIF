@@ -16,7 +16,6 @@ readme = "README.md"
 license = "WTFPL AND GPL-3.0-or-later AND BSD-3-Clause"
 license-files = [
     "LICENSE",
-    "SNEEDIF/vectorclass/license.txt",
     "SNEEDIF/half_float/LICENSE",
 ]
 requires-python = ">=3.12"
