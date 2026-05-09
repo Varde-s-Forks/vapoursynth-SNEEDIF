@@ -7,7 +7,7 @@ project('SNEEDIF', 'cpp',
 add_project_arguments('-ffast-math', '-DNNEDI3_DATADIR="@0@"'.format(join_paths(get_option('prefix'), get_option('datadir'), meson.project_name())), language : 'cpp')
 add_project_arguments('-Wno-unused-variable', '-Wno-ignored-attributes', '-Wno-sign-compare', '-Wno-narrowing', '-Wno-int-in-bool-context', '-ffast-math', language : 'cpp')
 add_project_arguments('-D_WIN32_WINNT=0x0A00', language: 'cpp') # Target Win10+
-add_project_arguments('-DCL_TARGET_OPENCL_VERSION=200', language: 'cpp') # Explicitly target OpenCL 2.0
+add_project_arguments('-DCL_TARGET_OPENCL_VERSION=120', language: 'cpp')
 
 sources = [
   'SNEEDIF/SNEEDIF.cpp',
@@ -24,11 +24,15 @@ r = run_command(
 )
 inc_vs = include_directories(r.stdout().strip())
 
-boost_dep = dependency('boost', modules : ['filesystem'], static : host_machine.system() == 'windows')
+boost_dep = dependency('boost', modules : ['filesystem'], static : host_machine.system() != 'linux')
 
-opencl_dep = dependency('OpenCL', required : false)
-if not opencl_dep.found()
-  opencl_dep = meson.get_compiler('cpp').find_library('OpenCL')
+if host_machine.system() == 'darwin'
+  opencl_dep = dependency('appleframeworks', modules : ['OpenCL'])
+else
+  opencl_dep = dependency('OpenCL', required : false)
+  if not opencl_dep.found()
+    opencl_dep = meson.get_compiler('cpp').find_library('OpenCL')
+  endif
 endif
 
 deps = [boost_dep, opencl_dep]
@@ -44,7 +48,6 @@ endif
 shared_module('sneedif', sources,
   dependencies : deps,
   include_directories : inc_vs,
-  install: true,
-  install_dir: py.get_install_dir() / 'vapoursynth/plugins',
+  install: false,
   gnu_symbol_visibility : 'hidden'
 )
